@@ -1,87 +1,113 @@
+
 #!/usr/bin/env python3
-"""Week 4 · Task 1 — Answer questions about a stream you cannot store.
+"""Week 4 - Task 1: Mining Data Streams."""
 
-Textbook §4.3 (sampling), §4.4 (Bloom filter), §4.5 (Flajolet-Martin).
-
-The premise of the whole chapter: the stream is longer than your memory, it
-goes past once, and you still have to answer. Every method here trades an exact
-answer for a bounded amount of space, and the job is to know exactly what you
-traded.
-
-You build three, and the harness checks each against the truth it is
-approximating.
-
-    python3 task1_sketches.py --verify
-"""
-import argparse, random
+import argparse
+import hashlib
+import math
+import random
+import statistics
 
 
 class BloomFilter:
-    """Membership, with one-sided error.
-
-    A Bloom filter never says "no" about something you inserted. It sometimes
-    says "yes" about something you did not. That asymmetry is the entire design
-    and it is why it is useful for "have I seen this before" and useless for
-    "is this definitely in the set".
-
-    `m` bits, `k` hash functions.
-    """
+    """Bloom filter: no false negatives, possible false positives."""
 
     def __init__(self, m, k, seed=246):
-        raise NotImplementedError("write the Bloom filter")
+        self.m = m
+        self.k = k
+        self.seed = seed
+        self.bits = bytearray((m + 7) // 8)
+
+    def _hashes(self, item):
+        data = repr(item).encode("utf-8")
+        seed_bytes = self.seed.to_bytes(8, "little", signed=True)
+        digest = hashlib.blake2b(
+            data + seed_bytes, digest_size=16
+        ).digest()
+
+        h1 = int.from_bytes(digest[:8], "little")
+        h2 = int.from_bytes(digest[8:], "little") | 1
+
+        for i in range(self.k):
+            yield (h1 + i * h2) % self.m
 
     def add(self, item):
-        raise NotImplementedError
+        for position in self._hashes(item):
+            byte_index = position >> 3
+            bit_mask = 1 << (position & 7)
+            self.bits[byte_index] |= bit_mask
 
     def __contains__(self, item):
-        raise NotImplementedError
-
+        return all(
+            self.bits[position >> 3] & (1 << (position & 7))
+            for position in self._hashes(item)
+        )
     def expected_fp_rate(self, n_inserted):
-        """The textbook's predicted false-positive rate after n insertions.
-
-        §4.4.2 derives it. Return the number, do not measure it - the harness
-        measures separately and compares the two.
-        """
-        raise NotImplementedError
+        """Theoretical false-positive rate from section 4.4.2."""
+        return (1 - math.exp(-self.k * n_inserted / self.m)) ** self.k
 
 
-def flajolet_martin(stream, n_hashes=64, seed=246):
-    """Estimate how many DISTINCT items went past, in almost no memory.
 
-    §4.5. Hash each item, count trailing zeros in the hash, keep the maximum.
-    A maximum of R suggests about 2^R distinct items, because seeing R trailing
-    zeros is a 1-in-2^R event.
+def flajolet_martin(stream, n_hashes=16, seed=246):
+    """Estimate the number of distinct items in a stream."""
+    maxima = [0] * n_hashes
+    seed_bytes = seed.to_bytes(8, "little", signed=True)
 
-    One hash gives an estimate with enormous variance, so you use many and
-    combine them. How you combine them matters a great deal:
+    for item in stream:
+        data = repr(item).encode("utf-8") + seed_bytes
 
-      * averaging 2^R directly is dominated by whichever hash got lucky - the
-        values are exponential, so one outlier swamps the rest
-      * the median is robust but can only ever be a power of two
-      * §4.5.3 suggests grouping, and combining twice
+        # Generate up to 8 independent 64-bit hash values per digest.
+        for round_index in range((n_hashes + 7) // 8):
+            digest = hashlib.blake2b(
+                data + bytes([round_index]),
+                digest_size=64
+            ).digest()
 
-    The harness accepts anything **within a factor of two** of the truth. That is
-    not a generous tolerance, it is an honest one: this method really is that
-    crude, and HyperLogLog exists because of it. Getting inside a factor of two
-    reliably is the requirement; getting closer than that is not expected here.
+            start = round_index * 8
+            count = min(8, n_hashes - start)
 
-    Return your estimate as a float.
-    """
-    raise NotImplementedError("write Flajolet-Martin")
+            for j in range(count):
+                x = int.from_bytes(
+                    digest[j * 8:(j + 1) * 8], "little"
+                )
+
+                zeros = 64 if x == 0 else (x & -x).bit_length() - 1
+                if zeros > maxima[start + j]:
+                    maxima[start + j] = zeros
+
+    estimates = [
+        0.77351 * (2 ** value) for value in maxima
+    ]
+
+    group_size = 8
+    group_estimates = [
+        statistics.median(estimates[i:i + group_size])
+        for i in range(0, n_hashes, group_size)
+    ]
+
+    return float(statistics.median(group_estimates))
+
 
 
 def reservoir_sample(stream, k, seed=246):
-    """Keep k items uniformly at random from a stream of unknown length.
+    """Uniformly sample up to k items from a stream of unknown length."""
+    if k <= 0:
+        return []
 
-    §4.3. Every item that went past must end up with the same probability k/n
-    of being in your sample, and you only ever hold k of them.
+    rng = random.Random(seed)
+    reservoir = []
 
-    Return a list of k items (or fewer if the stream was shorter).
-    """
-    raise NotImplementedError("write reservoir sampling")
+    for index, item in enumerate(stream):
+        if index < k:
+            reservoir.append(item)
+        else:
+            j = rng.randrange(index + 1)
+            if j < k:
+                reservoir[j] = item
+
+    return reservoir
 
 
-# ------------------------------------------------------------------- harness
 def verify():
     fails = 0
     rng = random.Random(246)
@@ -89,58 +115,72 @@ def verify():
     def check(label, ok, detail=""):
         nonlocal fails
         print(f"  {'ok  ' if ok else 'FAIL'}  {label:<46} {detail}")
-        fails += not ok
+        if not ok:
+            fails += 1
 
-    # --- Bloom: no false negatives, ever
-    try:
-        bf = BloomFilter(m=8192, k=5)
-    except NotImplementedError:
-        print("  BloomFilter is still a stub"); return 1
+    # Bloom filter: no false negatives
+    bf = BloomFilter(m=8192, k=5)
     inserted = [f"item-{i}" for i in range(800)]
-    for x in inserted:
-        bf.add(x)
-    check("no false negatives", all(x in bf for x in inserted))
 
+    for item in inserted:
+        bf.add(item)
+
+    check("no false negatives", all(item in bf for item in inserted))
+
+    # Compare measured and predicted false-positive rates
     absent = [f"other-{i}" for i in range(20_000)]
-    fp = sum(1 for x in absent if x in bf) / len(absent)
+    fp = sum(item in bf for item in absent) / len(absent)
     predicted = bf.expected_fp_rate(len(inserted))
     close = abs(fp - predicted) < max(0.02, predicted * 0.5)
-    check("measured false-positive rate matches theory", close,
-          f"measured {fp:.3%}, predicted {predicted:.3%}")
 
-    # --- Flajolet-Martin: a factor of two is what this method gives you
-    try:
-        distinct = 20_000
-        stream = [f"k{rng.randrange(distinct)}" for _ in range(120_000)]
-        est = flajolet_martin(stream)
-    except NotImplementedError:
-        print("  flajolet_martin is still a stub"); return 1
+    check(
+        "measured false-positive rate matches theory",
+        close,
+        f"measured {fp:.3%}, predicted {predicted:.3%}"
+    )
+
+    # Flajolet-Martin: estimate distinct count
+    distinct = 20_000
+    stream = [
+        f"k{rng.randrange(distinct)}"
+        for _ in range(120_000)
+    ]
+
+    estimate = flajolet_martin(stream)
     true_distinct = len(set(stream))
-    ratio = est / true_distinct
-    check("distinct estimate within a factor of 2", 0.5 <= ratio <= 2.0,
-          f"estimated {est:,.0f}, true {true_distinct:,} ({ratio:.2f}x)")
+    ratio = estimate / true_distinct
 
-    # --- Reservoir: uniform over many trials
-    try:
-        counts = [0] * 20
-        trials = 4000
-        for t in range(trials):
-            s = reservoir_sample(range(20), 5, seed=t)
-            for i in s:
-                counts[i] += 1
-    except NotImplementedError:
-        print("  reservoir_sample is still a stub"); return 1
+    check(
+        "distinct estimate within a factor of 2",
+        0.5 <= ratio <= 2.0,
+        f"estimated {estimate:,.0f}, true {true_distinct:,} "
+        f"({ratio:.2f}x)"
+    )
+
+    # Reservoir sampling: uniformity across 4,000 trials
+    counts = [0] * 20
+    trials = 4000
+
+    for t in range(trials):
+        sample = reservoir_sample(range(20), 5, seed=t)
+        for item in sample:
+            counts[item] += 1
+
     expected = trials * 5 / 20
     spread = (max(counts) - min(counts)) / expected
-    check("reservoir is uniform across items", spread < 0.15,
-          f"spread {spread:.1%} around {expected:.0f}")
+
+    check(
+        "reservoir is uniform across items",
+        spread < 0.15,
+        f"spread {spread:.1%} around {expected:.0f}"
+    )
 
     print(f"\n  {'all ok' if not fails else str(fails) + ' failed'}")
     return 1 if fails else 0
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    p.add_argument("--verify", action="store_true")
-    a = p.parse_args()
-    raise SystemExit(verify() if a.verify else p.print_help())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--verify", action="store_true")
+    args = parser.parse_args()
+    raise SystemExit(verify() if args.verify else parser.print_help())

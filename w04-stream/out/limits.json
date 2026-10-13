@@ -1,0 +1,239 @@
+{
+  "runs": [
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.676434800028801,
+      "exact_peak_bytes": 3925620
+    },
+    {
+      "n": 400000,
+      "true_distinct": 146970,
+      "exact_s": 2.8625055998563766,
+      "exact_peak_bytes": 11591316
+    },
+    {
+      "n": 1600000,
+      "true_distinct": 587625,
+      "exact_s": 12.173385299975052,
+      "exact_peak_bytes": 46647638
+    },
+    {
+      "n": 6400000,
+      "true_distinct": 2349909,
+      "exact_s": 111.54293730016798,
+      "exact_peak_bytes": 188287594
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.8449812999460846,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 32768.0,
+      "fm_s": 199.23084720014594,
+      "fm_peak_bytes": 440359,
+      "fm_ratio": 0.8928123807966868
+    },
+    {
+      "n": 400000,
+      "true_distinct": 146970,
+      "exact_s": 7.338309699902311,
+      "exact_peak_bytes": 11591316,
+      "fm_estimate": 131072.0,
+      "fm_s": 1181.077655900037,
+      "fm_peak_bytes": 4065,
+      "fm_ratio": 0.8918282642716201
+    },
+    {
+      "n": 1600000,
+      "true_distinct": 587625,
+      "exact_s": 9.255696499953046,
+      "exact_peak_bytes": 46647614,
+      "fm_estimate": 524288.0,
+      "fm_s": 93831.60861500003,
+      "fm_peak_bytes": 4065,
+      "fm_ratio": 0.8922152733460966
+    },
+    {
+      "n": 12800000,
+      "true_distinct": 4699458,
+      "exact_s": 90.48181220004335,
+      "exact_peak_bytes": 377573344
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.680588599992916,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 32768.0,
+      "fm_s": 56.31390150007792,
+      "fm_peak_bytes": 439799,
+      "fm_ratio": 0.8928123807966868
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.3063970999792218,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 32768.0,
+      "fm_s": 57.545852300012484,
+      "fm_peak_bytes": 451291,
+      "fm_ratio": 0.8928123807966868
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.3144800001755357,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 32768.0,
+      "fm_s": 22.81875710003078,
+      "fm_peak_bytes": 440087,
+      "fm_ratio": 0.8928123807966868
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.38573499978519976,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 49152.0,
+      "fm_s": 5.692341000074521,
+      "fm_peak_bytes": 439431,
+      "fm_ratio": 1.3392185711950302
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 1.133414200041443,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 32768.0,
+      "fm_s": 93.57169800018892,
+      "fm_peak_bytes": 439501,
+      "fm_ratio": 0.8928123807966868
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.3060357002541423,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 16384.0,
+      "fm_s": 0.8492478001862764,
+      "fm_peak_bytes": 50263,
+      "fm_ratio": 0.4464061903983434
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.282961199991405,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 81920.0,
+      "fm_s": 1.5856383997015655,
+      "fm_peak_bytes": 439926,
+      "fm_ratio": 2.232030951991717
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.2787322998046875,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 81920.0,
+      "fm_s": 1.5322410999797285,
+      "fm_peak_bytes": 439735,
+      "fm_ratio": 2.232030951991717
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.27392520010471344,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 38019.56352,
+      "fm_s": 61.66802889993414,
+      "fm_peak_bytes": 4483,
+      "fm_ratio": 1.0358989570050678
+    },
+    {
+      "n": 400000,
+      "true_distinct": 146970,
+      "exact_s": 1.2726855999790132,
+      "exact_peak_bytes": 11591316,
+      "fm_estimate": 101385.50272,
+      "fm_s": 288.8508456000127,
+      "fm_peak_bytes": 4486,
+      "fm_ratio": 0.6898380806967409
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.2890945002436638,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 38019.56352,
+      "fm_s": 65.76927189994603,
+      "fm_peak_bytes": 4483,
+      "fm_ratio": 1.0358989570050678
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.29763960000127554,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 38019.56352,
+      "fm_s": 16.594955699983984,
+      "fm_peak_bytes": 4099,
+      "fm_ratio": 1.0358989570050678
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.28864159993827343,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 31682.969600000004,
+      "fm_s": 7.7054131999611855,
+      "fm_peak_bytes": 4173,
+      "fm_ratio": 0.8632491308375566
+    },
+    {
+      "n": 100000,
+      "true_distinct": 36702,
+      "exact_s": 0.3146246001124382,
+      "exact_peak_bytes": 3925620,
+      "fm_estimate": 31682.969600000004,
+      "fm_s": 7.748351200018078,
+      "fm_peak_bytes": 4173,
+      "fm_ratio": 0.8632491308375566
+    },
+    {
+      "n": 400000,
+      "true_distinct": 146970,
+      "exact_s": 1.1503037000074983,
+      "exact_peak_bytes": 11591316,
+      "fm_estimate": 88712.31488,
+      "fm_s": 30.60942370025441,
+      "fm_peak_bytes": 4175,
+      "fm_ratio": 0.6036083206096483
+    },
+    {
+      "n": 1600000,
+      "true_distinct": 587625,
+      "exact_s": 4.748347000218928,
+      "exact_peak_bytes": 46647614,
+      "fm_estimate": 456234.76224000007,
+      "fm_s": 125.43605170026422,
+      "fm_peak_bytes": 4175,
+      "fm_ratio": 0.7764046155966817
+    },
+    {
+      "n": 6400000,
+      "true_distinct": 2349909,
+      "exact_s": 20.490610199980438,
+      "exact_peak_bytes": 188287594,
+      "fm_estimate": 1419397.03808,
+      "fm_s": 628.3003841000609,
+      "fm_peak_bytes": 4177,
+      "fm_ratio": 0.6040221294016066
+    }
+  ],
+  "machine": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "python": "3.13.15"
+  }
+}

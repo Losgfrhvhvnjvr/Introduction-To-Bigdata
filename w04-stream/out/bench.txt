@@ -1,0 +1,24 @@
+
+Task 3 — Benchmark results
+
+Configuration:
+80,000 bits
+8,000 items inserted
+200,000 queries
+
+Baseline:
+False positives: 19,023 (9.511%)
+False negatives: 0
+Memory: 80,000 bits
+
+YourFilter:
+False positives: 1,663 (0.831%)
+False negatives: 0
+Memory: 80,000 bits
+
+False-positive rate reduction: 91.3%
+
+Result: STRONG
+
+The filter respects the memory budget, produces zero false negatives,
+and achieves a false-positive rate below the 0.9% strong threshold.
