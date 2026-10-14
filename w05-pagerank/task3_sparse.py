@@ -61,35 +61,63 @@ class DenseMatrix:
         return getattr(self, "_n", 0) ** 2
 
 
+
 class YourPageRank:
-    """Your PageRank.
-
-        __init__(beta=0.85, tol=1e-10, max_iter=100)
-        run(graph) -> {node: rank}
-        memory_floats() -> the largest number of floats you held at once
-
-    Same ranks, to within 1e-9 per node. Far less memory.
-
-    `graph` is {node: [out-neighbours]}. Note what that already is: an adjacency
-    list, which is the sparse representation. The dense version throws that
-    structure away and then pays to get it back.
-
-    Two things to be careful about, and they are the same two as Task 1:
-
-      * dead ends, whose rank has to go somewhere
-      * the teleport term, which touches every node and is therefore the one
-        part that looks like it needs a dense operation - it does not, and
-        working out why is the point of §5.2.3
-
-    `memory_floats()` is on your honour and the harness reads it. Count the
-    numbers you actually hold at once.
-    """
+    """Sparse PageRank using the adjacency list."""
 
     def __init__(self, beta=0.85, tol=1e-10, max_iter=100):
-        raise NotImplementedError("write your PageRank")
+        self.beta = beta
+        self.tol = tol
+        self.max_iter = max_iter
+        self.iterations = 0
+        self._floats = 0
 
     def run(self, graph):
-        raise NotImplementedError
+        nodes = list(graph)
+        n = len(nodes)
+
+        if n == 0:
+            self.iterations = 0
+            self._floats = 0
+            return {}
+
+        ranks = {node: 1.0 / n for node in nodes}
+
+        for step in range(1, self.max_iter + 1):
+            # Redistribute the rank from dead ends uniformly.
+            dead_end_rank = sum(
+                ranks[node] for node in nodes if not graph[node]
+            )
+
+            base = (1.0 - self.beta) / n
+            dead_end_share = self.beta * dead_end_rank / n
+
+            new_ranks = {
+                node: base + dead_end_share for node in nodes
+            }
+
+            # Distribute rank along existing edges only.
+            for node in nodes:
+                links = graph[node]
+                if links:
+                    share = self.beta * ranks[node] / len(links)
+                    for target in links:
+                        new_ranks[target] += share
+
+            delta = sum(
+                abs(new_ranks[node] - ranks[node]) for node in nodes
+            )
+
+            # Track the largest number of rank floats held at once.
+            self._floats = max(self._floats, 2 * n)
+            ranks = new_ranks
+            self.iterations = step
+
+            if delta < self.tol:
+                break
+
+        return ranks
 
     def memory_floats(self):
-        raise NotImplementedError
+        return self._floats
+
