@@ -46,37 +46,68 @@ class PlainApriori:
                 if c >= self.support}
 
 
+
 class YourAlgorithm:
-    """Your frequent-pair finder.
+    """PCY: use bucket counts in pass one to filter pair candidates."""
 
-        __init__(support)
-        run(baskets) -> {frozenset({a, b}): count}
-        .peak_counters -> the most pair counters you ever held at once
-
-    Same pairs as the baseline. Fewer counters.
-
-    Pass one only needs one integer per item, and there are not many items. The
-    rest of your memory is sitting idle while you do it. §6.3 spends it: hash
-    every pair you see in pass one into a fixed array of buckets, and count the
-    buckets rather than the pairs.
-
-    A bucket whose total is below the support threshold cannot contain a
-    frequent pair. In pass two you skip every pair landing in such a bucket -
-    and the bucket array collapses to a bitmap, one bit each, before you need
-    the memory for counters.
-
-    Two things to be careful of:
-
-      * a bucket being frequent does not make its pairs frequent. It is a
-        filter, not an answer
-      * `peak_counters` is on your honour. Count the pair counters you hold at
-        the same time. The bitmap is not a pair counter, but if you keep the
-        full bucket counts alive into pass two, that is not free either -
-        observation.md asks about it
-    """
+    BUCKET_COUNT = 1_000_003
 
     def __init__(self, support):
-        raise NotImplementedError("write your algorithm")
+        self.support = support
+        self.peak_counters = 0
+
+    @staticmethod
+    def bucket(pair):
+        # The pair must be sorted so both passes use the same bucket.
+        return hash((pair[0], pair[1])) % YourAlgorithm.BUCKET_COUNT
 
     def run(self, baskets):
-        raise NotImplementedError
+        from array import array
+        from collections import Counter
+        from itertools import combinations
+
+        # Pass 1: count individual items and hashed pairs.
+        item_counts = Counter()
+        bucket_counts = array('I', [0]) * self.BUCKET_COUNT
+
+        for basket in baskets:
+            item_counts.update(basket)
+            items = sorted(basket)
+            for pair in combinations(items, 2):
+                bucket_counts[self.bucket(pair)] += 1
+
+        frequent_items = {
+            item for item, count in item_counts.items()
+            if count >= self.support
+        }
+
+        # Convert bucket counts to a compact bitmap.
+        bitmap = bytearray((self.BUCKET_COUNT + 7) // 8)
+        for i, count in enumerate(bucket_counts):
+            if count >= self.support:
+                bitmap[i >> 3] |= 1 << (i & 7)
+
+        # Release the bucket-count array before creating pair counters.
+        del bucket_counts
+        del item_counts
+
+        # Pass 2: count only pairs passing the PCY bitmap filter.
+        pair_counts = Counter()
+
+        for basket in baskets:
+            items = sorted(basket & frequent_items)
+            for pair in combinations(items, 2):
+                bucket = self.bucket(pair)
+                if bitmap[bucket >> 3] & (1 << (bucket & 7)):
+                    pair_counts[pair] += 1
+
+            self.peak_counters = max(
+                self.peak_counters, len(pair_counts)
+            )
+
+        return {
+            frozenset(pair): count
+            for pair, count in pair_counts.items()
+            if count >= self.support
+        }
+

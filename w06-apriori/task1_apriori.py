@@ -28,39 +28,74 @@ BASKETS = [
 ]
 
 
+
 def frequent_singletons(baskets, support):
     """Items appearing in at least `support` baskets. Return {item: count}."""
-    raise NotImplementedError("pass one")
+    counts = {}
+
+    for basket in baskets:
+        for item in basket:
+            counts[item] = counts.get(item, 0) + 1
+
+    return {
+        item: count
+        for item, count in counts.items()
+        if count >= support
+    }
 
 
 def frequent_pairs(baskets, support):
-    """Pairs appearing in at least `support` baskets, using A-Priori.
+    """Count frequent pairs using the A-Priori two-pass method."""
+    # Pass 1: find frequent individual items.
+    singles = frequent_singletons(baskets, support)
+    frequent_items = set(singles)
 
-    Return {frozenset({a, b}): count}.
+    # Pass 2: count only pairs of frequent individual items.
+    counts = {}
 
-    The requirement that makes this A-Priori rather than brute force: pass two
-    must only ever count pairs **both of whose items were frequent in pass one**.
-    If you count every pair and filter afterwards you have written the thing
-    A-Priori exists to avoid, and it will pass this harness while failing the
-    point. Task 3 measures whether you actually did it.
-    """
-    raise NotImplementedError("pass two")
+    for basket in baskets:
+        eligible_items = sorted(basket & frequent_items)
+
+        for a, b in combinations(eligible_items, 2):
+            pair = frozenset((a, b))
+            counts[pair] = counts.get(pair, 0) + 1
+
+    return {
+        pair: count
+        for pair, count in counts.items()
+        if count >= support
+    }
 
 
 def association_rules(baskets, support, min_confidence):
-    """Rules I -> j from the frequent pairs.
+    """Generate association rules with confidence and lift."""
+    total_baskets = len(baskets)
+    if total_baskets == 0:
+        return []
 
-    For a frequent pair {i, j}, confidence of i -> j is
-    support({i, j}) / support({i}).
+    singles = frequent_singletons(baskets, support)
+    pairs = frequent_pairs(baskets, support)
+    rules = []
 
-    Return [(antecedent, consequent, confidence, lift), ...] for rules whose
-    confidence is at least `min_confidence`, sorted by confidence descending.
+    for pair, pair_count in pairs.items():
+        a, b = sorted(pair)
 
-    `lift` is confidence divided by the consequent's own support fraction. A
-    rule with high confidence and lift near 1 tells you nothing - the consequent
-    was common anyway - and §6.1.3 is about why that matters more than it looks.
-    """
-    raise NotImplementedError("rules")
+        # Consider both directions: A -> B and B -> A.
+        for antecedent, consequent in ((a, b), (b, a)):
+            confidence = pair_count / singles[antecedent]
+            consequent_support = singles[consequent] / total_baskets
+            lift = confidence / consequent_support
+
+            if confidence >= min_confidence:
+                rules.append(
+                    (antecedent, consequent, confidence, lift)
+                )
+
+    # Highest confidence first.
+    rules.sort(key=lambda rule: rule[2], reverse=True)
+
+    return rules
+
 
 
 # ------------------------------------------------------------------- harness
